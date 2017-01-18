@@ -131,7 +131,9 @@ func (c *InitCommand) Run(args []string) int {
 			c.Ui.Output(c.Colorize().Color(fmt.Sprintf(
 				"[reset][bold]" +
 					"Initializing the backend...")))
-			if _, err := c.Backend(nil); err != nil {
+
+			opts := &BackendOpts{ConfigPath: path}
+			if _, err := c.Backend(opts); err != nil {
 				c.Ui.Error(err.Error())
 				return 1
 			}

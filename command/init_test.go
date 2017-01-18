@@ -236,6 +236,35 @@ func TestInit_backend(t *testing.T) {
 	}
 }
 
+func TestInit_copyBackendDst(t *testing.T) {
+	// Create a temporary working directory that is empty
+	td := tempDir(t)
+	os.MkdirAll(td, 0755)
+	defer os.RemoveAll(td)
+	defer testChdir(t, td)()
+
+	ui := new(cli.MockUi)
+	c := &InitCommand{
+		Meta: Meta{
+			ContextOpts: testCtxConfig(testProvider()),
+			Ui:          ui,
+		},
+	}
+
+	args := []string{
+		testFixturePath("init-backend"),
+		"dst",
+	}
+	if code := c.Run(args); code != 0 {
+		t.Fatalf("bad: \n%s", ui.ErrorWriter.String())
+	}
+
+	if _, err := os.Stat(filepath.Join(
+		"dst", DefaultDataDir, DefaultStateFilename)); err != nil {
+		t.Fatalf("err: %s", err)
+	}
+}
+
 /*
 func TestInit_remoteState(t *testing.T) {
 	tmp, cwd := testCwd(t)
