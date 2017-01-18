@@ -5,6 +5,7 @@ package command
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/hcl"
 	"github.com/hashicorp/terraform/backend"
 	backendlegacy "github.com/hashicorp/terraform/backend/legacy"
 	backendlocal "github.com/hashicorp/terraform/backend/local"
@@ -24,8 +26,13 @@ import (
 // BackendOpts are the options used to initialize a backend.Backend.
 type BackendOpts struct {
 	// ConfigPath is a path to a file or directory containing the backend
-	// configuration.
+	// configuration (declaration).
 	ConfigPath string
+
+	// ConfigFile is a path to a file that contains configuration that
+	// is merged directly into the backend configuration when loaded
+	// from a file.
+	ConfigFile string
 
 	// Plan is a plan that is being used. If this is set, the backend
 	// configuration and output configuration will come from this plan.
@@ -199,8 +206,54 @@ func (m *Meta) backendConfig(opts *BackendOpts) (*config.Backend, error) {
 		return nil, nil
 	}
 
+	// Get the configuration for the backend itself.
+	backend := c.Terraform.Backend
+	if backend == nil {
+		return nil, nil
+	}
+
+	// If we have a config file set, load that and merge.
+	if opts.ConfigFile != "" {
+		log.Printf(
+			"[DEBUG] command: loading extra backend config from: %s",
+			opts.ConfigFile)
+		rc, err := m.backendConfigFile(opts.ConfigFile)
+		if err != nil {
+			return nil, fmt.Errorf(
+				"Error loading extra configuration file for backend: %s", err)
+		}
+
+		// Merge in the configuration
+		backend.RawConfig = backend.RawConfig.Merge(rc)
+	}
+
 	// Return the configuration which may or may not be set
 	return c.Terraform.Backend, nil
+}
+
+// backendConfigFile loads the extra configuration to merge with the
+// backend configuration from an extra file if specified by
+// BackendOpts.ConfigFile.
+func (m *Meta) backendConfigFile(path string) (*config.RawConfig, error) {
+	// Read the file
+	d, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	// Parse it
+	hclRoot, err := hcl.Parse(string(d))
+	if err != nil {
+		return nil, err
+	}
+
+	// Decode it
+	var c map[string]interface{}
+	if err := hcl.DecodeObject(&c, hclRoot); err != nil {
+		return nil, err
+	}
+
+	return config.NewRawConfig(c)
 }
 
 // backendFromConfig returns the initialized (not configured) backend

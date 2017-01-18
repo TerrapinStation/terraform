@@ -20,9 +20,11 @@ type InitCommand struct {
 
 func (c *InitCommand) Run(args []string) int {
 	var flagBackend, flagGet bool
+	var flagConfigFile string
 	args = c.Meta.process(args, false)
 	cmdFlags := flag.NewFlagSet("init", flag.ContinueOnError)
 	cmdFlags.BoolVar(&flagBackend, "backend", true, "")
+	cmdFlags.StringVar(&flagConfigFile, "backend-config", "", "")
 	cmdFlags.BoolVar(&flagGet, "get", true, "")
 	cmdFlags.Usage = func() { c.Ui.Error(c.Help()) }
 	if err := cmdFlags.Parse(args); err != nil {
@@ -132,7 +134,10 @@ func (c *InitCommand) Run(args []string) int {
 				"[reset][bold]" +
 					"Initializing the backend...")))
 
-			opts := &BackendOpts{ConfigPath: path}
+			opts := &BackendOpts{
+				ConfigPath: path,
+				ConfigFile: flagConfigFile,
+			}
 			if _, err := c.Backend(opts); err != nil {
 				c.Ui.Error(err.Error())
 				return 1
@@ -199,14 +204,17 @@ Usage: terraform init [options] [SOURCE] [PATH]
 
 Options:
 
-  -backend=true       Configure the backend for this environment.
+  -backend=true        Configure the backend for this environment.
 
-  -get=true           Download any modules for this configuration.
+  -backend-config=path A path to load additional configuration for the backend.
+                       This is merged with what is in the configuration file.
 
-  -input=true         Ask for input if necessary. If false, will error if
-                      input was required.
+  -get=true            Download any modules for this configuration.
 
-  -no-color           If specified, output won't contain any color.
+  -input=true          Ask for input if necessary. If false, will error if
+                       input was required.
+
+  -no-color            If specified, output won't contain any color.
 
 `
 	return strings.TrimSpace(helpText)
