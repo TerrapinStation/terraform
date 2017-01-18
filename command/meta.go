@@ -169,40 +169,6 @@ func (m *Meta) InputMode() terraform.InputMode {
 	return mode
 }
 
-// State returns the state for this meta.
-func (m *Meta) State() (state.State, error) {
-	if m.state != nil {
-		return m.state, nil
-	}
-
-	result, err := State(m.StateOpts())
-	if err != nil {
-		return nil, err
-	}
-
-	m.state = result.State
-	m.stateOutPath = result.StatePath
-	m.stateResult = result
-	return m.state, nil
-}
-
-// StateOpts returns the default state options
-func (m *Meta) StateOpts() *StateOpts {
-	localPath := m.statePath
-	if localPath == "" {
-		localPath = DefaultStateFilename
-	}
-	remotePath := filepath.Join(m.DataDir(), DefaultStateFilename)
-
-	return &StateOpts{
-		LocalPath:     localPath,
-		LocalPathOut:  m.stateOutPath,
-		RemotePath:    remotePath,
-		RemoteRefresh: true,
-		BackupPath:    m.backupPath,
-	}
-}
-
 // UIInput returns a UIInput object to be used for asking for input.
 func (m *Meta) UIInput() terraform.UIInput {
 	return &UIInput{

@@ -67,14 +67,26 @@ func (c *ShowCommand) Run(args []string) int {
 			}
 		}
 	} else {
-		stateOpts := c.StateOpts()
-		stateOpts.RemoteCacheOnly = true
-		result, err := State(stateOpts)
+		// Load the backend
+		b, err := c.Backend(nil)
 		if err != nil {
-			c.Ui.Error(fmt.Sprintf("Error reading state: %s", err))
+			c.Ui.Error(fmt.Sprintf("Failed to load backend: %s", err))
 			return 1
 		}
-		state = result.State.State()
+
+		// Get the state
+		stateStore, err := b.State()
+		if err != nil {
+			c.Ui.Error(fmt.Sprintf("Failed to load state: %s", err))
+			return 1
+		}
+
+		if err := stateStore.RefreshState(); err != nil {
+			c.Ui.Error(fmt.Sprintf("Failed to load state: %s", err))
+			return 1
+		}
+
+		state = stateStore.State()
 		if state == nil {
 			c.Ui.Output("No state.")
 			return 0
