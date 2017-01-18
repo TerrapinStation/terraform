@@ -186,19 +186,6 @@ func (m *Meta) State() (state.State, error) {
 	return m.state, nil
 }
 
-// StateRaw is used to setup the state manually.
-func (m *Meta) StateRaw(opts *StateOpts) (*StateResult, error) {
-	result, err := State(opts)
-	if err != nil {
-		return nil, err
-	}
-
-	m.state = result.State
-	m.stateOutPath = result.StatePath
-	m.stateResult = result
-	return result, nil
-}
-
 // StateOpts returns the default state options
 func (m *Meta) StateOpts() *StateOpts {
 	localPath := m.statePath

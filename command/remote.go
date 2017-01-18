@@ -21,9 +21,6 @@ func (c *RemoteCommand) Run(argsRaw []string) int {
 	}
 
 	switch args[0] {
-	case "config":
-		cmd := &RemoteConfigCommand{Meta: c.Meta}
-		return cmd.Run(args[1:])
 	case "pull":
 		cmd := &RemotePullCommand{Meta: c.Meta}
 		return cmd.Run(args[1:])
