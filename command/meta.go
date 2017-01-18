@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform/helper/experiment"
 	"github.com/hashicorp/terraform/helper/variables"
 	"github.com/hashicorp/terraform/helper/wrappedstreams"
-	"github.com/hashicorp/terraform/state"
 	"github.com/hashicorp/terraform/terraform"
 	"github.com/mitchellh/cli"
 	"github.com/mitchellh/colorstring"
@@ -90,15 +89,6 @@ type Meta struct {
 	parallelism  int
 	shadow       bool
 	provider     string
-
-	//----------------------------------------------------------
-	// TODO: REMOVE
-	//----------------------------------------------------------
-
-	// State read when calling `Context`. This is available after calling
-	// `Context`.
-	state       state.State
-	stateResult *StateResult
 }
 
 // initStatePaths is used to initialize the default values for
