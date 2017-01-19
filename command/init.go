@@ -1,7 +1,6 @@
 package command
 
 import (
-	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -22,7 +21,7 @@ func (c *InitCommand) Run(args []string) int {
 	var flagBackend, flagGet bool
 	var flagConfigFile string
 	args = c.Meta.process(args, false)
-	cmdFlags := flag.NewFlagSet("init", flag.ContinueOnError)
+	cmdFlags := c.flagSet("init")
 	cmdFlags.BoolVar(&flagBackend, "backend", true, "")
 	cmdFlags.StringVar(&flagConfigFile, "backend-config", "", "")
 	cmdFlags.BoolVar(&flagGet, "get", true, "")

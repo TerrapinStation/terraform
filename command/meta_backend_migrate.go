@@ -78,7 +78,9 @@ func (m *Meta) backendMigrateEmptyConfirm(opts *backendMigrateOpts) (bool, error
 		Query: fmt.Sprintf(
 			"Do you want to copy state from %q to %q?",
 			opts.OneType, opts.TwoType),
-		Description: strings.TrimSpace(inputBackendMigrateEmpty),
+		Description: fmt.Sprintf(
+			strings.TrimSpace(inputBackendMigrateEmpty),
+			opts.OneType, opts.TwoType),
 	}
 
 	// Confirm with the user that the copy should occur

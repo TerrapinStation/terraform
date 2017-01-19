@@ -29,30 +29,34 @@ func New() backend.Backend {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: "Access token for a Consul ACL",
+					Default:     "", // To prevent input
 				},
 
 				"address": &schema.Schema{
 					Type:        schema.TypeString,
 					Optional:    true,
-					Description: "Address to Consul",
+					Description: "Address to the Consul Cluster",
 				},
 
 				"scheme": &schema.Schema{
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: "Scheme to communicate to Consul with",
+					Default:     "", // To prevent input
 				},
 
 				"datacenter": &schema.Schema{
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: "Datacenter to communicate with",
+					Default:     "", // To prevent input
 				},
 
 				"http_auth": &schema.Schema{
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: "HTTP Auth in the format of 'username:password'",
+					Default:     "", // To prevent input
 				},
 			},
 		},
@@ -65,10 +69,10 @@ func configure(ctx context.Context) (remote.Client, error) {
 
 	// Configure the client
 	config := consulapi.DefaultConfig()
-	if v, ok := data.GetOk("access_token"); ok {
+	if v, ok := data.GetOk("access_token"); ok && v.(string) != "" {
 		config.Token = v.(string)
 	}
-	if v, ok := data.GetOk("address"); ok {
+	if v, ok := data.GetOk("address"); ok && v.(string) != "" {
 		config.Address = v.(string)
 	}
 	if v, ok := data.GetOk("scheme"); ok && v.(string) != "" {

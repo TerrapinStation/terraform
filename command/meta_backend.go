@@ -849,8 +849,8 @@ func (m *Meta) backend_C_R_s(
 	}
 
 	m.Ui.Output(m.Colorize().Color(fmt.Sprintf(
-		"[reset][green]%s\n\n",
-		strings.TrimSpace(successBackendSet), s.Backend.Type)))
+		"[reset][green]%s\n\n"+
+			strings.TrimSpace(successBackendSet), s.Backend.Type)))
 
 	return b, nil
 }
