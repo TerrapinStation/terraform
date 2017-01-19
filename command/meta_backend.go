@@ -4,6 +4,7 @@ package command
 // exported and private.
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -39,6 +40,11 @@ type BackendOpts struct {
 	// Plan is a plan that is being used. If this is set, the backend
 	// configuration and output configuration will come from this plan.
 	Plan *terraform.Plan
+
+	// Init should be set to true if initialization is allowed. If this is
+	// false, then any configuration that requires configuration will show
+	// an error asking the user to reinitialize.
+	Init bool
 
 	// ForceLocal will force a purely local backend, including state.
 	// You probably don't want to set this.
@@ -309,6 +315,14 @@ func (m *Meta) backendFromConfig(opts *BackendOpts) (backend.Backend, error) {
 
 	// We're unsetting a backend (moving from backend => local)
 	case c == nil && s.Remote.Empty() && !s.Backend.Empty():
+		if !opts.Init {
+			initReason := fmt.Sprintf(
+				"Unsetting the previously set backend %q",
+				s.Backend.Type)
+			m.backendInitRequired(initReason)
+			return nil, errBackendInitRequired
+		}
+
 		return m.backend_c_r_S(c, sMgr, true)
 
 	// We have a legacy remote state configuration but no new backend config
@@ -322,10 +336,26 @@ func (m *Meta) backendFromConfig(opts *BackendOpts) (backend.Backend, error) {
 	// This is a naturally impossible case: Terraform will never put you
 	// in this state, though it is theoretically possible through manual edits
 	case c == nil && !s.Remote.Empty() && !s.Backend.Empty():
+		if !opts.Init {
+			initReason := fmt.Sprintf(
+				"Unsetting the previously set backend %q",
+				s.Backend.Type)
+			m.backendInitRequired(initReason)
+			return nil, errBackendInitRequired
+		}
+
 		return m.backend_c_R_S(c, sMgr)
 
 	// Configuring a backend for the first time.
 	case c != nil && s.Remote.Empty() && s.Backend.Empty():
+		if !opts.Init {
+			initReason := fmt.Sprintf(
+				"Initial configuration of the requested backend %q",
+				c.Type)
+			m.backendInitRequired(initReason)
+			return nil, errBackendInitRequired
+		}
+
 		return m.backend_C_r_s(c, sMgr)
 
 	// Potentially changing a backend configuration
@@ -334,6 +364,14 @@ func (m *Meta) backendFromConfig(opts *BackendOpts) (backend.Backend, error) {
 		// a previously configured remote backend.
 		if !s.Backend.Empty() && s.Backend.Hash == c.Hash {
 			return m.backend_C_r_S_unchanged(c, sMgr)
+		}
+
+		if !opts.Init {
+			initReason := fmt.Sprintf(
+				"Backend configuration changed for %q",
+				c.Type)
+			m.backendInitRequired(initReason)
+			return nil, errBackendInitRequired
 		}
 
 		log.Printf(
@@ -345,6 +383,14 @@ func (m *Meta) backendFromConfig(opts *BackendOpts) (backend.Backend, error) {
 	// remote state. This is very possible if a Terraform user configures
 	// a backend prior to ever running Terraform on an old state.
 	case c != nil && !s.Remote.Empty() && s.Backend.Empty():
+		if !opts.Init {
+			initReason := fmt.Sprintf(
+				"Initial configuration for backend %q",
+				c.Type)
+			m.backendInitRequired(initReason)
+			return nil, errBackendInitRequired
+		}
+
 		return m.backend_C_R_s(c, sMgr)
 
 	// Configuring a backend with both a legacy remote state set
@@ -353,7 +399,23 @@ func (m *Meta) backendFromConfig(opts *BackendOpts) (backend.Backend, error) {
 		// If the hashes are the same, we have a legacy remote state with
 		// an unchanged stored backend state.
 		if s.Backend.Hash == c.Hash {
+			if !opts.Init {
+				initReason := fmt.Sprintf(
+					"Legacy remote state found with configured backend %q",
+					c.Type)
+				m.backendInitRequired(initReason)
+				return nil, errBackendInitRequired
+			}
+
 			return m.backend_C_R_S_unchanged(c, sMgr, true)
+		}
+
+		if !opts.Init {
+			initReason := fmt.Sprintf(
+				"Reconfiguring the backend %q",
+				c.Type)
+			m.backendInitRequired(initReason)
+			return nil, errBackendInitRequired
 		}
 
 		// We have change in all three
@@ -613,8 +675,8 @@ func (m *Meta) backend_c_r_S(
 
 	if output {
 		m.Ui.Output(m.Colorize().Color(fmt.Sprintf(
-			"[reset][green]%s\n\n",
-			strings.TrimSpace(successBackendUnset), backendType)))
+			"[reset][green]\n\n"+
+				strings.TrimSpace(successBackendUnset), backendType)))
 	}
 
 	// Return no backend
@@ -742,8 +804,8 @@ func (m *Meta) backend_c_R_S(
 	}
 
 	m.Ui.Output(m.Colorize().Color(fmt.Sprintf(
-		"[reset][green]%s\n\n",
-		strings.TrimSpace(successBackendUnset), backendType)))
+		"[reset][green]\n\n"+
+			strings.TrimSpace(successBackendUnset), backendType)))
 
 	return nil, nil
 }
@@ -853,7 +915,7 @@ func (m *Meta) backend_C_R_s(
 	}
 
 	m.Ui.Output(m.Colorize().Color(fmt.Sprintf(
-		"[reset][green]%s\n\n"+
+		"[reset][green]\n\n"+
 			strings.TrimSpace(successBackendSet), s.Backend.Type)))
 
 	return b, nil
@@ -930,7 +992,7 @@ func (m *Meta) backend_C_r_s(
 	}
 
 	m.Ui.Output(m.Colorize().Color(fmt.Sprintf(
-		"[reset][green]%s\n\n"+
+		"[reset][green]\n\n"+
 			strings.TrimSpace(successBackendSet), s.Backend.Type)))
 
 	// Return the backend
@@ -949,6 +1011,10 @@ func (m *Meta) backend_C_r_S_changed(
 
 	// Get the backend
 	b, err := m.backendInitFromConfig(c)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"Error initializing new backend: %s", err)
+	}
 
 	// Check with the user if we want to migrate state
 	copy, err := m.confirm(&terraform.InputOpts{
@@ -1023,8 +1089,8 @@ func (m *Meta) backend_C_r_S_changed(
 
 	if output {
 		m.Ui.Output(m.Colorize().Color(fmt.Sprintf(
-			"[reset][green]%s\n\n",
-			strings.TrimSpace(successBackendSet), s.Backend.Type)))
+			"[reset][green]\n\n"+
+				strings.TrimSpace(successBackendSet), s.Backend.Type)))
 	}
 
 	return b, nil
@@ -1080,8 +1146,8 @@ func (m *Meta) backend_C_R_S_changed(
 
 	// Output success message
 	m.Ui.Output(m.Colorize().Color(fmt.Sprintf(
-		"[reset][green]%s\n\n",
-		strings.TrimSpace(successBackendReconfigureWithLegacy), c.Type)))
+		"[reset][green]\n\n"+
+			strings.TrimSpace(successBackendReconfigureWithLegacy), c.Type)))
 
 	return b, nil
 }
@@ -1169,8 +1235,8 @@ func (m *Meta) backend_C_R_S_unchanged(
 
 	if output {
 		m.Ui.Output(m.Colorize().Color(fmt.Sprintf(
-			"[reset][green]%s\n\n",
-			strings.TrimSpace(successBackendLegacyUnset), s.Backend.Type)))
+			"[reset][green]\n\n"+
+				strings.TrimSpace(successBackendLegacyUnset), s.Backend.Type)))
 	}
 
 	return b, nil
@@ -1273,6 +1339,11 @@ func (m *Meta) backendInitFromSaved(s *terraform.BackendState) (backend.Backend,
 	return b, nil
 }
 
+func (m *Meta) backendInitRequired(reason string) {
+	m.Ui.Output(m.Colorize().Color(fmt.Sprintf(
+		"[reset]"+strings.TrimSpace(errBackendInit)+"\n", reason)))
+}
+
 //-------------------------------------------------------------------
 // Output constants and initialization code
 //-------------------------------------------------------------------
@@ -1296,6 +1367,11 @@ func init() {
 	// the new backend API.
 	backendlegacy.Init(Backends)
 }
+
+// errBackendInitRequired is the final error message shown when reinit
+// is required for some reason. The error message includes the reason.
+var errBackendInitRequired = errors.New(
+	"Initialization required. Please see the error message above.")
 
 const errBackendLegacyConfig = `
 One or more errors occurred while configuring the legacy remote state.
@@ -1420,6 +1496,24 @@ Terraform removes the saved backend configuration when you're removing a
 configured backend. This must be done so future Terraform runs know to not
 use the backend configuration. Please look at the error above, resolve it,
 and try again.
+`
+
+const errBackendInit = `
+[reset][bold][yellow]Backend reinitialization required. Please run "terraform init".[reset]
+[yellow]Reason: %s
+
+The "backend" is the interface that Terraform uses to store state,
+perform operations, etc. If this message is showing up, it means that the
+Terraform configuration you're using is using a custom configuration for
+the Terraform backend.
+
+Changes to backend configurations require reinitialization. This allows
+Terraform to setup the new configuration, copy existing state, etc. This is
+only done during "terraform init". Please run that command now then try again.
+
+If the change reason above is incorrect, please verify your configuration
+hasn't changed and try again. At this point, no changes to your existing
+configuration or state have been made.
 `
 
 const errBackendWriteSaved = `

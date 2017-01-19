@@ -21,7 +21,7 @@ func TestMetaBackend_emptyDir(t *testing.T) {
 
 	// Get the backend
 	m := testMetaBackend(t, nil)
-	b, err := m.Backend(nil)
+	b, err := m.Backend(&BackendOpts{Init: true})
 	if err != nil {
 		t.Fatalf("bad: %s", err)
 	}
@@ -77,7 +77,7 @@ func TestMetaBackend_emptyWithDefaultState(t *testing.T) {
 
 	// Get the backend
 	m := testMetaBackend(t, nil)
-	b, err := m.Backend(nil)
+	b, err := m.Backend(&BackendOpts{Init: true})
 	if err != nil {
 		t.Fatalf("bad: %s", err)
 	}
@@ -145,7 +145,7 @@ func TestMetaBackend_emptyWithExplicitState(t *testing.T) {
 	m.statePath = statePath
 
 	// Get the backend
-	b, err := m.Backend(nil)
+	b, err := m.Backend(&BackendOpts{Init: true})
 	if err != nil {
 		t.Fatalf("bad: %s", err)
 	}
@@ -199,7 +199,7 @@ func TestMetaBackend_emptyLegacyRemote(t *testing.T) {
 	m := testMetaBackend(t, nil)
 
 	// Get the backend
-	b, err := m.Backend(nil)
+	b, err := m.Backend(&BackendOpts{Init: true})
 	if err != nil {
 		t.Fatalf("bad: %s", err)
 	}
@@ -248,7 +248,7 @@ func TestMetaBackend_configureNew(t *testing.T) {
 	m := testMetaBackend(t, nil)
 
 	// Get the backend
-	b, err := m.Backend(nil)
+	b, err := m.Backend(&BackendOpts{Init: true})
 	if err != nil {
 		t.Fatalf("bad: %s", err)
 	}
@@ -317,7 +317,7 @@ func TestMetaBackend_configureNewWithState(t *testing.T) {
 	m := testMetaBackend(t, nil)
 
 	// Get the backend
-	b, err := m.Backend(nil)
+	b, err := m.Backend(&BackendOpts{Init: true})
 	if err != nil {
 		t.Fatalf("bad: %s", err)
 	}
@@ -390,7 +390,7 @@ func TestMetaBackend_configureNewWithStateNoMigrate(t *testing.T) {
 	m := testMetaBackend(t, nil)
 
 	// Get the backend
-	b, err := m.Backend(nil)
+	b, err := m.Backend(&BackendOpts{Init: true})
 	if err != nil {
 		t.Fatalf("bad: %s", err)
 	}
@@ -433,7 +433,7 @@ func TestMetaBackend_configureNewWithStateExisting(t *testing.T) {
 	m := testMetaBackend(t, nil)
 
 	// Get the backend
-	b, err := m.Backend(nil)
+	b, err := m.Backend(&BackendOpts{Init: true})
 	if err != nil {
 		t.Fatalf("bad: %s", err)
 	}
@@ -505,7 +505,7 @@ func TestMetaBackend_configureNewWithStateExistingNoMigrate(t *testing.T) {
 	m := testMetaBackend(t, nil)
 
 	// Get the backend
-	b, err := m.Backend(nil)
+	b, err := m.Backend(&BackendOpts{Init: true})
 	if err != nil {
 		t.Fatalf("bad: %s", err)
 	}
@@ -577,7 +577,7 @@ func TestMetaBackend_configureNewLegacy(t *testing.T) {
 	m := testMetaBackend(t, nil)
 
 	// Get the backend
-	b, err := m.Backend(nil)
+	b, err := m.Backend(&BackendOpts{Init: true})
 	if err != nil {
 		t.Fatalf("bad: %s", err)
 	}
@@ -667,7 +667,7 @@ func TestMetaBackend_configureNewLegacyCopy(t *testing.T) {
 	m := testMetaBackend(t, nil)
 
 	// Get the backend
-	b, err := m.Backend(nil)
+	b, err := m.Backend(&BackendOpts{Init: true})
 	if err != nil {
 		t.Fatalf("bad: %s", err)
 	}
@@ -753,7 +753,7 @@ func TestMetaBackend_configuredUnchanged(t *testing.T) {
 	m := testMetaBackend(t, nil)
 
 	// Get the backend
-	b, err := m.Backend(nil)
+	b, err := m.Backend(&BackendOpts{Init: true})
 	if err != nil {
 		t.Fatalf("bad: %s", err)
 	}
@@ -800,7 +800,7 @@ func TestMetaBackend_configuredChange(t *testing.T) {
 	m := testMetaBackend(t, nil)
 
 	// Get the backend
-	b, err := m.Backend(nil)
+	b, err := m.Backend(&BackendOpts{Init: true})
 	if err != nil {
 		t.Fatalf("bad: %s", err)
 	}
@@ -879,7 +879,7 @@ func TestMetaBackend_configuredChangeCopy(t *testing.T) {
 	m := testMetaBackend(t, nil)
 
 	// Get the backend
-	b, err := m.Backend(nil)
+	b, err := m.Backend(&BackendOpts{Init: true})
 	if err != nil {
 		t.Fatalf("bad: %s", err)
 	}
@@ -926,7 +926,7 @@ func TestMetaBackend_configuredUnset(t *testing.T) {
 	m := testMetaBackend(t, nil)
 
 	// Get the backend
-	b, err := m.Backend(nil)
+	b, err := m.Backend(&BackendOpts{Init: true})
 	if err != nil {
 		t.Fatalf("bad: %s", err)
 	}
@@ -1007,7 +1007,7 @@ func TestMetaBackend_configuredUnsetCopy(t *testing.T) {
 	m := testMetaBackend(t, nil)
 
 	// Get the backend
-	b, err := m.Backend(nil)
+	b, err := m.Backend(&BackendOpts{Init: true})
 	if err != nil {
 		t.Fatalf("bad: %s", err)
 	}
@@ -1086,7 +1086,7 @@ func TestMetaBackend_configuredUnchangedLegacy(t *testing.T) {
 	m := testMetaBackend(t, nil)
 
 	// Get the backend
-	b, err := m.Backend(nil)
+	b, err := m.Backend(&BackendOpts{Init: true})
 	if err != nil {
 		t.Fatalf("bad: %s", err)
 	}
@@ -1189,7 +1189,7 @@ func TestMetaBackend_configuredUnchangedLegacyCopy(t *testing.T) {
 	m := testMetaBackend(t, nil)
 
 	// Get the backend
-	b, err := m.Backend(nil)
+	b, err := m.Backend(&BackendOpts{Init: true})
 	if err != nil {
 		t.Fatalf("bad: %s", err)
 	}
@@ -1292,7 +1292,7 @@ func TestMetaBackend_configuredChangedLegacy(t *testing.T) {
 	m := testMetaBackend(t, nil)
 
 	// Get the backend
-	b, err := m.Backend(nil)
+	b, err := m.Backend(&BackendOpts{Init: true})
 	if err != nil {
 		t.Fatalf("bad: %s", err)
 	}
@@ -1392,7 +1392,7 @@ func TestMetaBackend_configuredChangedLegacyCopyBackend(t *testing.T) {
 	m := testMetaBackend(t, nil)
 
 	// Get the backend
-	b, err := m.Backend(nil)
+	b, err := m.Backend(&BackendOpts{Init: true})
 	if err != nil {
 		t.Fatalf("bad: %s", err)
 	}
@@ -1495,7 +1495,7 @@ func TestMetaBackend_configuredChangedLegacyCopyLegacy(t *testing.T) {
 	m := testMetaBackend(t, nil)
 
 	// Get the backend
-	b, err := m.Backend(nil)
+	b, err := m.Backend(&BackendOpts{Init: true})
 	if err != nil {
 		t.Fatalf("bad: %s", err)
 	}
@@ -1598,7 +1598,7 @@ func TestMetaBackend_configuredChangedLegacyCopyBoth(t *testing.T) {
 	m := testMetaBackend(t, nil)
 
 	// Get the backend
-	b, err := m.Backend(nil)
+	b, err := m.Backend(&BackendOpts{Init: true})
 	if err != nil {
 		t.Fatalf("bad: %s", err)
 	}
@@ -1701,7 +1701,7 @@ func TestMetaBackend_configuredUnsetWithLegacyNoCopy(t *testing.T) {
 	m := testMetaBackend(t, nil)
 
 	// Get the backend
-	b, err := m.Backend(nil)
+	b, err := m.Backend(&BackendOpts{Init: true})
 	if err != nil {
 		t.Fatalf("bad: %s", err)
 	}
@@ -1791,7 +1791,7 @@ func TestMetaBackend_configuredUnsetWithLegacyCopyBackend(t *testing.T) {
 	m := testMetaBackend(t, nil)
 
 	// Get the backend
-	b, err := m.Backend(nil)
+	b, err := m.Backend(&BackendOpts{Init: true})
 	if err != nil {
 		t.Fatalf("bad: %s", err)
 	}
@@ -1889,7 +1889,7 @@ func TestMetaBackend_configuredUnsetWithLegacyCopyLegacy(t *testing.T) {
 	m := testMetaBackend(t, nil)
 
 	// Get the backend
-	b, err := m.Backend(nil)
+	b, err := m.Backend(&BackendOpts{Init: true})
 	if err != nil {
 		t.Fatalf("bad: %s", err)
 	}
@@ -1987,7 +1987,7 @@ func TestMetaBackend_configuredUnsetWithLegacyCopyBoth(t *testing.T) {
 	m := testMetaBackend(t, nil)
 
 	// Get the backend
-	b, err := m.Backend(nil)
+	b, err := m.Backend(&BackendOpts{Init: true})
 	if err != nil {
 		t.Fatalf("bad: %s", err)
 	}

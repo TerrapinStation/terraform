@@ -136,6 +136,7 @@ func (c *InitCommand) Run(args []string) int {
 			opts := &BackendOpts{
 				ConfigPath: path,
 				ConfigFile: flagConfigFile,
+				Init:       true,
 			}
 			if _, err := c.Backend(opts); err != nil {
 				c.Ui.Error(err.Error())
