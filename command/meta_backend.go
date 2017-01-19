@@ -15,12 +15,14 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/hcl"
 	"github.com/hashicorp/terraform/backend"
-	backendlegacy "github.com/hashicorp/terraform/backend/legacy"
-	backendlocal "github.com/hashicorp/terraform/backend/local"
 	"github.com/hashicorp/terraform/config"
 	"github.com/hashicorp/terraform/state"
 	"github.com/hashicorp/terraform/terraform"
 	"github.com/mitchellh/mapstructure"
+
+	backendlegacy "github.com/hashicorp/terraform/backend/legacy"
+	backendlocal "github.com/hashicorp/terraform/backend/local"
+	backendconsul "github.com/hashicorp/terraform/backend/remote-state/consul"
 )
 
 // BackendOpts are the options used to initialize a backend.Backend.
@@ -1282,7 +1284,8 @@ var Backends map[string]func() backend.Backend
 func init() {
 	// Our hardcoded backends
 	Backends = map[string]func() backend.Backend{
-		"local": func() backend.Backend { return &backendlocal.Local{} },
+		"local":  func() backend.Backend { return &backendlocal.Local{} },
+		"consul": func() backend.Backend { return backendconsul.New() },
 	}
 
 	// Add the legacy remote backends that haven't yet been convertd to
