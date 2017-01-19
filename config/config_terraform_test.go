@@ -43,7 +43,10 @@ func TestBackendHash(t *testing.T) {
 				t.Fatalf("err: %s", err)
 			}
 
-			actual := c.Terraform.Backend.Hash()
+			var actual uint64
+			if c.Terraform != nil && c.Terraform.Backend != nil {
+				actual = c.Terraform.Backend.Hash
+			}
 			if actual != tc.Code {
 				t.Fatalf("bad: %d != %d", actual, tc.Code)
 			}

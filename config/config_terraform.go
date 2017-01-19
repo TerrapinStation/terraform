@@ -18,11 +18,15 @@ type Terraform struct {
 type Backend struct {
 	Type      string
 	RawConfig *RawConfig
+
+	// Hash is a unique hash code representing the original configuration
+	// of the backend. This won't be recomputed unless Rehash is called.
+	Hash uint64
 }
 
 // Hash returns a unique content hash for this backend's configuration
 // as a uint64 value.
-func (b *Backend) Hash() uint64 {
+func (b *Backend) Rehash() uint64 {
 	// If we have no backend, the value is zero
 	if b == nil {
 		return 0

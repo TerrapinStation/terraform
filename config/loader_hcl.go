@@ -278,10 +278,13 @@ func loadTerraformBackendHcl(list *ast.ObjectList) (*Backend, error) {
 			err)
 	}
 
-	return &Backend{
+	b := &Backend{
 		Type:      typ,
 		RawConfig: rawConfig,
-	}, nil
+	}
+	b.Hash = b.Rehash()
+
+	return b, nil
 }
 
 // Given a handle to a HCL object, this transforms it into the Atlas

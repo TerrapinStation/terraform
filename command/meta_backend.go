@@ -230,7 +230,7 @@ func (m *Meta) backendConfig(opts *BackendOpts) (*config.Backend, error) {
 	}
 
 	// Return the configuration which may or may not be set
-	return c.Terraform.Backend, nil
+	return backend, nil
 }
 
 // backendConfigFile loads the extra configuration to merge with the
@@ -332,10 +332,13 @@ func (m *Meta) backendFromConfig(opts *BackendOpts) (backend.Backend, error) {
 	case c != nil && s.Remote.Empty() && !s.Backend.Empty():
 		// If our configuration is the same, then we're just initializing
 		// a previously configured remote backend.
-		if !s.Backend.Empty() && s.Backend.Hash == c.Hash() {
+		if !s.Backend.Empty() && s.Backend.Hash == c.Hash {
 			return m.backend_C_r_S_unchanged(c, sMgr)
 		}
 
+		log.Printf(
+			"[WARN] command: backend config change! saved: %d, new: %d",
+			s.Backend.Hash, c.Hash)
 		return m.backend_C_r_S_changed(c, sMgr, true)
 
 	// Configuring a backend for the first time while having legacy
@@ -349,7 +352,7 @@ func (m *Meta) backendFromConfig(opts *BackendOpts) (backend.Backend, error) {
 	case c != nil && !s.Remote.Empty() && !s.Backend.Empty():
 		// If the hashes are the same, we have a legacy remote state with
 		// an unchanged stored backend state.
-		if s.Backend.Hash == c.Hash() {
+		if s.Backend.Hash == c.Hash {
 			return m.backend_C_R_S_unchanged(c, sMgr, true)
 		}
 
@@ -546,9 +549,10 @@ func (m *Meta) backend_c_r_S(
 
 	// Confirm with the user that the copy should occur
 	copy, err := m.confirm(&terraform.InputOpts{
-		Id:          "backend-migrate-to-local",
-		Query:       fmt.Sprintf("Do you want to copy the state from %q?", s.Backend.Type),
-		Description: strings.TrimSpace(inputBackendMigrateLocal),
+		Id:    "backend-migrate-to-local",
+		Query: fmt.Sprintf("Do you want to copy the state from %q?", s.Backend.Type),
+		Description: fmt.Sprintf(
+			strings.TrimSpace(inputBackendMigrateLocal), s.Backend.Type),
 	})
 	if err != nil {
 		return nil, fmt.Errorf(
@@ -767,7 +771,7 @@ func (m *Meta) backend_C_R_s(
 	s.Backend = &terraform.BackendState{
 		Type:   c.Type,
 		Config: c.RawConfig.Raw,
-		Hash:   c.Hash(),
+		Hash:   c.Hash,
 	}
 	if err := sMgr.WriteState(s); err != nil {
 		return nil, fmt.Errorf(errBackendWriteSaved, err)
@@ -916,7 +920,7 @@ func (m *Meta) backend_C_r_s(
 	s.Backend = &terraform.BackendState{
 		Type:   c.Type,
 		Config: c.RawConfig.Raw,
-		Hash:   c.Hash(),
+		Hash:   c.Hash,
 	}
 	if err := sMgr.WriteState(s); err != nil {
 		return nil, fmt.Errorf(errBackendWriteSaved, err)
@@ -926,8 +930,8 @@ func (m *Meta) backend_C_r_s(
 	}
 
 	m.Ui.Output(m.Colorize().Color(fmt.Sprintf(
-		"[reset][green]%s\n\n",
-		strings.TrimSpace(successBackendSet), s.Backend.Type)))
+		"[reset][green]%s\n\n"+
+			strings.TrimSpace(successBackendSet), s.Backend.Type)))
 
 	// Return the backend
 	return b, nil
@@ -1008,7 +1012,7 @@ func (m *Meta) backend_C_r_S_changed(
 	s.Backend = &terraform.BackendState{
 		Type:   c.Type,
 		Config: c.RawConfig.Raw,
-		Hash:   c.Hash(),
+		Hash:   c.Hash,
 	}
 	if err := sMgr.WriteState(s); err != nil {
 		return nil, fmt.Errorf(errBackendWriteSaved, err)
